@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <!--
+    Content-Security-Policy — security lock for this page.
+    This policy tells the browser: only load scripts, styles, and images
+    from this same website. No external servers, no inline scripts.
+    Even if this hosting service (GitHub Pages) were compromised and
+    someone injected a malicious script tag, the browser would refuse to run it.
+    Your text never leaves this device regardless.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>validZT</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#1c1c1e">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header: app name and the offline/install button -->
+    <header class="header">
+      <h1>validZT</h1>
+      <button id="btn-pwa" class="btn btn-offline" title="Офлайн и установка">&#9992; offline</button>
+    </header>
+
+    <!-- Toolbar: paste, fix, copy, undo, reset buttons -->
+    <div class="toolbar">
+      <div class="toolbar-row">
+        <button id="btn-paste" class="btn btn-full" title="Вставить из буфера обмена">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          Вставить
+        </button>
+      </div>
+      <div class="toolbar-row">
+        <button id="btn-fix" class="btn btn-primary btn-grow" title="Заменить или удалить недопустимые символы">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Исправить
+        </button>
+        <button id="btn-info" class="btn btn-icon" title="Какие символы проверяются">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </button>
+        <button id="btn-undo" class="btn btn-icon" disabled title="Отменить последнее исправление">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <button id="btn-reset" class="btn btn-icon" title="Очистить">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="toolbar-row">
+        <button id="btn-copy" class="btn btn-full" title="Копировать результат">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Копировать
+        </button>
+      </div>
+    </div>
+
+    <!-- Editor area: transparent overlay highlights problem characters;
+         the textarea underneath is where the user types or pastes text.
+         Both are kept in perfect sync so highlights line up with the text. -->
+    <div class="editor-container">
+      <div id="overlay" class="overlay" aria-hidden="true"></div>
+      <textarea id="textarea" class="textarea" placeholder="Вставьте текст для проверки..."></textarea>
+    </div>
+
+    <!-- Status bar: shows validation result on the left,
+         format toggle (ZT / ПР) and character/page count on the right -->
+    <div class="status-bar">
+      <span id="status-text">Готово</span>
+      <div class="status-right">
+        <button id="btn-format" class="btn-format" title="Формат доставки: ZT — стандарт, ПР — Почта России">ZT</button>
+        <span id="char-count"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info modal: explains which characters are checked and why -->
+  <div id="info-modal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <button class="modal-close" aria-label="Закрыть">&times;</button>
+      <h2>Какие символы проверяются</h2>
+      <div class="modal-body">
+        <h3>Заменяются автоматически</h3>
+        <table class="char-table">
+          <tr><th>Символ</th><th>Замена</th></tr>
+          <tr><td><code>&#x2212;</code> минус (U+2212)</td><td><code>-</code> дефис</td></tr>
+          <tr><td><code>&#x2033;</code> двойной штрих (U+2033)</td><td><code>"</code> кавычка</td></tr>
+          <tr><td><code>&#x20BD;</code> знак рубля (U+20BD)</td><td><code>руб.</code> текст</td></tr>
+          <tr><td>тонкий пробел (U+2009)</td><td>обычный пробел</td></tr>
+          <tr><td>длинный пробел (U+2003)</td><td>обычный пробел</td></tr>
+          <tr><td>средний пробел (U+2002)</td><td>обычный пробел</td></tr>
+          <tr><td>табуляция</td><td>обычный пробел</td></tr>
+        </table>
+
+        <h3>Удаляются</h3>
+        <table class="char-table">
+          <tr><td>Пробел нулевой ширины (U+200B)</td></tr>
+          <tr><td>Селекторы вариантов (U+FE0F, U+FE0E)</td></tr>
+          <tr><td>Все эмодзи (кроме &copy; &trade; &reg;)</td></tr>
+        </table>
+
+        <h3>Допустимые символы</h3>
+        <p>Кавычки: &laquo;&raquo; &ldquo;&rdquo; &lsquo;&rsquo; &bdquo; " '</p>
+        <p>Тире: &mdash; &ndash; -</p>
+        <p>Символы: &copy; &trade; &reg; &deg; &#8470; &bull; &times; &hellip;</p>
+        <p>Неразрывный пробел, кириллица, латиница, цифры, переносы строк</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA modal: explains offline capability and how to install the app -->
+  <div id="pwa-modal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <button class="modal-close" aria-label="Закрыть">&times;</button>
+      <h2>&#9992; Offline</h2>
+      <div class="modal-body"> 
+        <p>validZT &mdash; это PWA (Progressive Web App).<br> После первого открытия все файлы сохраняются на устройстве. Приложение работает полностью без интернета, никакие данные не отправляются на сервер &mdash; всё обрабатывается локально в браузере.</p>
+        <p>&bull; Мгновенный запуск без браузера и адресной строки<br>
+           &bull; Работа без интернета в любом месте<br>
+           &bull; Иконка на рабочем столе / домашнем экране<br>
+           &bull; Полная конфиденциальность &mdash; текст не покидает устройство</p>
+
+        <h3>Как установить</h3>
+
+        <h3>Android (Chrome)</h3>
+        <p>1. Откройте эту страницу в Chrome<br>
+           2. Нажмите меню (&vellip;) в правом верхнем углу<br>
+           3. Выберите &laquo;Установить приложение&raquo; или &laquo;Добавить на главный экран&raquo;<br>
+           4. Подтвердите установку</p>
+
+        <h3>iPhone / iPad (Safari)</h3>
+        <p>1. Откройте эту страницу в Safari<br>
+           2. Нажмите кнопку &laquo;Поделиться&raquo; (квадрат со стрелкой внизу экрана)<br>
+           3. Пролистайте вниз и выберите &laquo;На экран Домой&raquo;<br>
+           4. Нажмите &laquo;Добавить&raquo;</p>
+
+        <h3>Компьютер (Chrome / Edge)</h3>
+        <p>1. Откройте эту страницу в Chrome или Edge<br>
+           2. Найдите иконку установки в правой части адресной строки (монитор с плюсом)<br>
+           3. Нажмите &laquo;Установить&raquo;</p>
+
+        <h3>Firefox</h3>
+        <p>Firefox не поддерживает установку PWA. Приложение всё равно работает оффлайн, но без отдельной иконки. Используйте Chrome, Edge или Safari для установки.</p>
+
+        <h3>Вопросы и поддержка</h3>
+        <p><a href="mailto:validZT@pm.me">validZT@pm.me</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- sw-register.js is a separate file (not inline) because the security policy
+       on this page blocks inline scripts — see the Content-Security-Policy meta tag above. -->
+  <script src="sw-register.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
