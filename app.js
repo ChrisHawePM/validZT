@@ -182,8 +182,43 @@ const btnPwa = document.getElementById('btn-pwa');
 const infoModal = document.getElementById('info-modal');
 const pwaModal = document.getElementById('pwa-modal');
 const toast = document.getElementById('toast');
+const emptyHint = document.getElementById('empty-hint');
+const editorContainer = document.querySelector('.editor-container');
+const steps = [
+  document.querySelector('[data-step="1"]'),
+  document.querySelector('[data-step="2"]'),
+  document.querySelector('[data-step="3"]'),
+];
 
 let lastDiffChanges = null;
+
+// ─── Pipeline state ──────────────────────────────────────────────────────────
+// Updates the visual step indicators (1→2→3) based on the current app state.
+// Each step can be active (current action), done (completed), or pending (not yet).
+function updatePipelineState(hasText, hasErrors) {
+  // Determine step states
+  const states = !hasText
+    ? ['active', 'pending', 'pending']
+    : hasErrors
+      ? ['done', 'active', 'pending']
+      : ['done', 'done', 'active'];
+
+  steps.forEach((step, i) => {
+    step.classList.remove('active', 'done', 'pending');
+    step.classList.add(states[i]);
+  });
+
+  // Empty hint visibility
+  emptyHint.classList.toggle('hidden', hasText);
+
+  // Button enable/disable
+  btnFix.disabled = !hasErrors;
+  btnCopy.disabled = !hasText;
+
+  // Editor border state
+  editorContainer.classList.toggle('has-errors', hasText && hasErrors);
+  editorContainer.classList.toggle('is-clean', hasText && !hasErrors);
+}
 
 // ─── Overlay rendering ────────────────────────────────────────────────────────
 // The editor has two layers: a visible textarea where you type, and a hidden
@@ -244,23 +279,33 @@ function updateValidation() {
   renderOverlay(text, invalid, lastDiffChanges || null);
 
   const count = invalid.length;
+  const hasText = text.length > 0;
+  const hasErrors = hasText && count > 0 && !lastDiffChanges;
+
+  // Status text + color
+  statusText.classList.remove('status-error', 'status-success');
   if (lastDiffChanges) {
     statusText.textContent = 'Исправления применены';
+    statusText.classList.add('status-success');
   } else if (count > 0) {
     statusText.textContent = 'Найдено недопустимых символов: ' + count;
-  } else if (text.length > 0) {
+    statusText.classList.add('status-error');
+  } else if (hasText) {
     statusText.textContent = 'Текст в порядке';
+    statusText.classList.add('status-success');
   } else {
     statusText.textContent = 'Готово';
   }
 
-  if (text.length > 0) {
+  if (hasText) {
     const est = estimatePages(text);
     charCount.textContent = text.length + ' симв. | ~' + est.pages + ' стр. (~' + est.lines + ' строк)';
   } else {
     charCount.textContent = '';
   }
+
   btnUndo.disabled = !canUndo();
+  updatePipelineState(hasText, hasErrors);
 }
 
 // Keep overlay scroll and size in sync with the textarea at all times.
@@ -331,7 +376,13 @@ btnFix.addEventListener('click', () => {
 btnCopy.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(textarea.value);
-    showToast('Скопировано!');
+    btnCopy.classList.add('flash-success');
+    const origHTML = btnCopy.innerHTML;
+    btnCopy.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Скопировано';
+    setTimeout(() => {
+      btnCopy.classList.remove('flash-success');
+      btnCopy.innerHTML = origHTML;
+    }, 1500);
   } catch {
     showToast('Не удалось скопировать');
   }

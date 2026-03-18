@@ -30,31 +30,31 @@
       <button id="btn-pwa" class="btn btn-offline" title="Офлайн и установка">&#9992; offline</button>
     </header>
 
-    <!-- Toolbar: paste, fix, copy, undo, reset buttons -->
-    <div class="toolbar">
-      <div class="toolbar-row">
-        <button id="btn-paste" class="btn btn-full" title="Вставить из буфера обмена">
+    <!-- Pipeline: 3-step workflow — paste → fix → copy -->
+    <div class="pipeline">
+      <div class="step active" data-step="1">
+        <span class="step-number">1</span>
+        <button id="btn-paste" class="btn btn-step" title="Вставить из буфера обмена">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
           Вставить
         </button>
       </div>
-      <div class="toolbar-row">
-        <button id="btn-fix" class="btn btn-primary btn-grow" title="Заменить или удалить недопустимые символы">
+      <span class="step-arrow" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </span>
+      <div class="step pending" data-step="2">
+        <span class="step-number">2</span>
+        <button id="btn-fix" class="btn btn-step" disabled title="Заменить или удалить недопустимые символы">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
           Исправить
         </button>
-        <button id="btn-info" class="btn btn-icon" title="Какие символы проверяются">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        </button>
-        <button id="btn-undo" class="btn btn-icon" disabled title="Отменить последнее исправление">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-        </button>
-        <button id="btn-reset" class="btn btn-icon" title="Очистить">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
       </div>
-      <div class="toolbar-row">
-        <button id="btn-copy" class="btn btn-full" title="Копировать результат">
+      <span class="step-arrow" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </span>
+      <div class="step pending" data-step="3">
+        <span class="step-number">3</span>
+        <button id="btn-copy" class="btn btn-step" disabled title="Копировать результат">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Копировать
         </button>
@@ -65,8 +65,22 @@
          the textarea underneath is where the user types or pastes text.
          Both are kept in perfect sync so highlights line up with the text. -->
     <div class="editor-container">
+      <div id="empty-hint" class="empty-hint">Нажмите <strong>Вставить</strong> или Ctrl+V</div>
       <div id="overlay" class="overlay" aria-hidden="true"></div>
-      <textarea id="textarea" class="textarea" placeholder="Вставьте текст для проверки..."></textarea>
+      <textarea id="textarea" class="textarea" placeholder=""></textarea>
+    </div>
+
+    <!-- Utility buttons: secondary actions -->
+    <div class="utility-bar">
+      <button id="btn-undo" class="btn btn-util" disabled title="Отменить последнее исправление">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      </button>
+      <button id="btn-reset" class="btn btn-util" title="Очистить">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button id="btn-info" class="btn btn-util" title="Какие символы проверяются">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
     </div>
 
     <!-- Status bar: shows validation result on the left,

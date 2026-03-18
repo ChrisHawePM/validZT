@@ -9,7 +9,7 @@
 
 // Bump this string whenever the app files change so old cached versions
 // are replaced with the new ones on the user's next online visit.
-const CACHE_VERSION = 'validzt-v5';
+const CACHE_VERSION = 'validzt-v6';
 
 // The complete list of files to cache on first install.
 // Every file the app needs to run offline must be listed here.

@@ -74,17 +74,154 @@ html, body {
   background: var(--surface-alt);
 }
 
-/* Toolbar */
-.toolbar {
+/* Pipeline */
+.pipeline {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   padding-bottom: 10px;
 }
 
-.toolbar-row {
+.step {
   display: flex;
+  align-items: center;
   gap: 6px;
+  transition: opacity 0.2s;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.step-arrow {
+  color: var(--text-secondary);
+  opacity: 0.3;
+  margin: 0 6px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+/* Step states */
+.step.active .step-number {
+  background: var(--primary);
+  color: #fff;
+}
+
+.step.active .btn-step {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  font-weight: 500;
+}
+
+.step.active .btn-step:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.step.active .btn-step:active {
+  background: var(--primary-active);
+}
+
+.step.done .step-number {
+  background: rgba(48, 209, 88, 0.2);
+  color: #30d158;
+}
+
+.step.done + .step-arrow {
+  opacity: 1;
+  color: #30d158;
+}
+
+.step.pending {
+  opacity: 0.35;
+}
+
+.step.pending .btn-step {
+  cursor: not-allowed;
+}
+
+/* Fix button pulse when active */
+.step.active #btn-fix {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.3); }
+  50%      { box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.1); }
+}
+
+/* Copy success flash */
+@keyframes flash-success {
+  0%   { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4); }
+  50%  { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+}
+
+.btn-step.flash-success {
+  animation: flash-success 0.6s ease-out;
+}
+
+/* Utility bar */
+.utility-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.btn-util {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+}
+
+.btn-util:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.btn-util:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.btn-util:disabled:hover {
+  background: transparent;
+}
+
+/* Empty hint */
+.empty-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.empty-hint.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .btn {
@@ -132,32 +269,8 @@ html, body {
   transform: none;
 }
 
-.btn-full {
+.btn-step {
   flex: 1;
-}
-
-.btn-grow {
-  flex: 1;
-}
-
-.btn-icon {
-  padding: 9px;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-  font-weight: 500;
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
-}
-
-.btn-primary:active {
-  background: var(--primary-active);
 }
 
 /* Editor */
@@ -232,6 +345,25 @@ html, body {
   background: var(--highlight-deletion);
 }
 
+/* Editor state borders */
+.editor-container.has-errors .textarea {
+  border-color: rgba(255, 69, 58, 0.4);
+}
+
+.editor-container.has-errors .textarea:focus {
+  border-color: rgba(255, 69, 58, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.15);
+}
+
+.editor-container.is-clean .textarea {
+  border-color: rgba(48, 209, 88, 0.3);
+}
+
+.editor-container.is-clean .textarea:focus {
+  border-color: rgba(48, 209, 88, 0.5);
+  box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.12);
+}
+
 /* Status bar */
 .status-bar {
   display: flex;
@@ -240,6 +372,14 @@ html, body {
   padding: 6px 2px;
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+#status-text.status-error {
+  color: rgba(255, 69, 58, 0.9);
+}
+
+#status-text.status-success {
+  color: #30d158;
 }
 
 .status-right {
@@ -402,27 +542,39 @@ html, body {
     font-size: 1.05rem;
   }
 
-  .toolbar {
-    gap: 5px;
+  .step-number {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
   }
 
-  .toolbar-row {
-    gap: 5px;
+  .step-arrow {
+    margin: 0 3px;
   }
 
-  .btn {
+  .step-arrow svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .btn-step {
     padding: 8px 10px;
     font-size: 0.8rem;
-    gap: 5px;
+    gap: 4px;
   }
 
-  .btn-icon {
-    padding: 8px;
-  }
-
-  .btn svg {
+  .btn-step svg {
     width: 14px;
     height: 14px;
+  }
+
+  .btn-util svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .empty-hint {
+    font-size: 0.8rem;
   }
 
   .textarea, .overlay {
