@@ -5,12 +5,12 @@
 }
 
 :root {
-  --highlight-invalid: rgba(255, 69, 58, 0.35);
-  --highlight-substitution: rgba(48, 209, 88, 0.3);
+  --highlight-invalid: rgba(103, 61, 204, 0.35);
+  --highlight-substitution: rgba(0, 191, 127, 0.3);
   --highlight-deletion: rgba(142, 142, 147, 0.3);
-  --primary: #0a84ff;
-  --primary-hover: #409cff;
-  --primary-active: #0071e3;
+  --primary: #673dcc;
+  --primary-hover: #7b52d9;
+  --primary-active: #5a32b5;
   --bg: #000000;
   --surface: #1c1c1e;
   --surface-alt: #2c2c2e;
@@ -74,20 +74,18 @@ html, body {
   background: var(--surface-alt);
 }
 
-/* Pipeline */
-.pipeline {
+/* Toolbar */
+.toolbar {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
+  flex-direction: column;
+  gap: 6px;
   padding-bottom: 10px;
 }
 
-.step {
+.toolbar-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: opacity 0.2s;
 }
 
 .step-number {
@@ -105,103 +103,40 @@ html, body {
   transition: background 0.2s, color 0.2s;
 }
 
-.step-arrow {
-  color: var(--text-secondary);
-  opacity: 0.3;
-  margin: 0 6px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  transition: opacity 0.2s, color 0.2s;
-}
-
 /* Step states */
-.step.active .step-number {
+.toolbar-row.active .step-number {
   background: var(--primary);
   color: #fff;
 }
 
-.step.active .btn-step {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-  font-weight: 500;
+.toolbar-row.done .step-number {
+  background: rgba(0, 191, 127, 0.2);
+  color: #00bf7f;
 }
 
-.step.active .btn-step:hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
-}
-
-.step.active .btn-step:active {
-  background: var(--primary-active);
-}
-
-.step.done .step-number {
-  background: rgba(48, 209, 88, 0.2);
-  color: #30d158;
-}
-
-.step.done + .step-arrow {
-  opacity: 1;
-  color: #30d158;
-}
-
-.step.pending {
+.toolbar-row.pending {
   opacity: 0.35;
 }
 
-.step.pending .btn-step {
-  cursor: not-allowed;
-}
-
 /* Fix button pulse when active */
-.step.active #btn-fix {
+.toolbar-row.active #btn-fix {
   animation: subtle-pulse 2s ease-in-out infinite;
 }
 
 @keyframes subtle-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.3); }
-  50%      { box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.1); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(103, 61, 204, 0.3); }
+  50%      { box-shadow: 0 0 0 4px rgba(103, 61, 204, 0.1); }
 }
 
 /* Copy success flash */
 @keyframes flash-success {
-  0%   { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.4); }
-  50%  { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0.15); }
-  100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(0, 191, 127, 0.4); }
+  50%  { box-shadow: 0 0 0 6px rgba(0, 191, 127, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 191, 127, 0); }
 }
 
-.btn-step.flash-success {
+.btn.flash-success {
   animation: flash-success 0.6s ease-out;
-}
-
-/* Utility bar */
-.utility-bar {
-  display: flex;
-  gap: 4px;
-  padding: 4px 0;
-}
-
-.btn-util {
-  background: transparent;
-  border-color: transparent;
-  color: var(--text-secondary);
-  padding: 6px 8px;
-}
-
-.btn-util:hover {
-  background: var(--surface-alt);
-  color: var(--text);
-}
-
-.btn-util:disabled {
-  opacity: 0.25;
-  cursor: not-allowed;
-}
-
-.btn-util:disabled:hover {
-  background: transparent;
 }
 
 /* Empty hint */
@@ -257,7 +192,7 @@ html, body {
 }
 
 .btn:disabled {
-  opacity: 0.25;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -269,8 +204,32 @@ html, body {
   transform: none;
 }
 
-.btn-step {
+.btn-full {
   flex: 1;
+}
+
+.btn-grow {
+  flex: 1;
+}
+
+.btn-icon {
+  padding: 9px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-primary:active {
+  background: var(--primary-active);
 }
 
 /* Editor */
@@ -298,18 +257,18 @@ html, body {
   position: relative;
   z-index: 2;
   background: transparent;
-  color: var(--text);
+  color: #8e8e93;
   resize: none;
   overflow: auto;
-  -webkit-text-fill-color: var(--text);
-  caret-color: var(--primary);
+  -webkit-text-fill-color: #8e8e93;
+  caret-color: #673dcc;
   -webkit-appearance: none;
 }
 
 .textarea:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
+  border-color: rgba(103, 61, 204, 0.5);
+  box-shadow: 0 0 0 2px rgba(103, 61, 204, 0.15);
 }
 
 .textarea::placeholder {
@@ -347,24 +306,39 @@ html, body {
 
 /* Editor state borders */
 .editor-container.has-errors .textarea {
-  border-color: rgba(255, 69, 58, 0.4);
+  border-color: rgba(103, 61, 204, 0.4);
 }
 
 .editor-container.has-errors .textarea:focus {
-  border-color: rgba(255, 69, 58, 0.6);
-  box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.15);
+  border-color: rgba(103, 61, 204, 0.6);
+  box-shadow: 0 0 0 2px rgba(103, 61, 204, 0.15);
 }
 
 .editor-container.is-clean .textarea {
-  border-color: rgba(48, 209, 88, 0.3);
+  border-color: rgba(0, 191, 127, 0.3);
 }
 
 .editor-container.is-clean .textarea:focus {
-  border-color: rgba(48, 209, 88, 0.5);
-  box-shadow: 0 0 0 2px rgba(48, 209, 88, 0.12);
+  border-color: rgba(0, 191, 127, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 191, 127, 0.12);
 }
 
-/* Status bar */
+/* Status text (above editor) */
+.status-text-bar {
+  padding: 4px 2px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+#status-text.status-error {
+  color: #673dcc;
+}
+
+#status-text.status-success {
+  color: #00bf7f;
+}
+
+/* Bottom bar (below editor) */
 .status-bar {
   display: flex;
   justify-content: space-between;
@@ -372,14 +346,6 @@ html, body {
   padding: 6px 2px;
   font-size: 0.75rem;
   color: var(--text-secondary);
-}
-
-#status-text.status-error {
-  color: rgba(255, 69, 58, 0.9);
-}
-
-#status-text.status-success {
-  color: #30d158;
 }
 
 .status-right {
@@ -402,7 +368,7 @@ html, body {
 }
 
 .btn-format:hover { color: var(--text); }
-.btn-format.active { border-color: var(--primary); color: var(--primary); }
+.btn-format.active { border-color: #673dcc; color: #673dcc; }
 
 /* Modal */
 .modal-backdrop {
@@ -542,35 +508,33 @@ html, body {
     font-size: 1.05rem;
   }
 
+  .toolbar {
+    gap: 5px;
+  }
+
+  .toolbar-row {
+    gap: 5px;
+  }
+
   .step-number {
     width: 18px;
     height: 18px;
     font-size: 0.65rem;
   }
 
-  .step-arrow {
-    margin: 0 3px;
-  }
-
-  .step-arrow svg {
-    width: 10px;
-    height: 10px;
-  }
-
-  .btn-step {
+  .btn {
     padding: 8px 10px;
     font-size: 0.8rem;
-    gap: 4px;
+    gap: 5px;
   }
 
-  .btn-step svg {
+  .btn-icon {
+    padding: 8px;
+  }
+
+  .btn svg {
     width: 14px;
     height: 14px;
-  }
-
-  .btn-util svg {
-    width: 13px;
-    height: 13px;
   }
 
   .empty-hint {

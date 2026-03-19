@@ -29,26 +29,21 @@ test.describe('Empty state', () => {
 });
 
 test.describe('Text with invalid characters', () => {
-  test('step 2 becomes active, red highlights appear', async ({ page }) => {
-    // \u2212 is a minus sign (invalid, gets replaced)
+  test('step 2 becomes active, highlights appear', async ({ page }) => {
     await setTextareaValue(page, 'тест \u2212 текст');
 
     expect(await getStepState(page, 1)).toEqual({ active: false, done: true, pending: false });
     expect(await getStepState(page, 2)).toEqual({ active: true, done: false, pending: false });
     expect(await getStepState(page, 3)).toEqual({ active: false, done: false, pending: true });
 
-    // Fix button enabled, Copy disabled (pending)
     await expect(page.locator('#btn-fix')).toBeEnabled();
 
-    // Red highlight present
     const invalidMark = page.locator('.overlay mark.invalid');
     await expect(invalidMark).toHaveCount(1);
 
-    // Status shows error count
     const status = await getStatusText(page);
     expect(status).toContain('Найдено недопустимых символов');
 
-    // Empty hint hidden
     await expect(page.locator('#empty-hint')).toHaveClass(/hidden/);
   });
 
@@ -68,20 +63,16 @@ test.describe('Fix flow', () => {
     await setTextareaValue(page, 'тест \u2212 текст');
     await page.click('#btn-fix');
 
-    // Textarea text should be fixed (minus → hyphen)
     const value = await page.inputValue('#textarea');
     expect(value).toBe('тест - текст');
 
-    // Green highlights present
     const subMark = page.locator('.overlay mark.substitution');
     await expect(subMark).toHaveCount(1);
 
-    // Step 3 active
     expect(await getStepState(page, 1)).toEqual({ active: false, done: true, pending: false });
     expect(await getStepState(page, 2)).toEqual({ active: false, done: true, pending: false });
     expect(await getStepState(page, 3)).toEqual({ active: true, done: false, pending: false });
 
-    // Status
     const status = await getStatusText(page);
     expect(status).toBe('Исправления применены');
     await expect(page.locator('#status-text')).toHaveClass(/status-success/);
@@ -100,14 +91,11 @@ test.describe('Undo flow', () => {
     await page.click('#btn-fix');
     await page.click('#btn-undo');
 
-    // Text reverted
     const value = await page.inputValue('#textarea');
     expect(value).toBe('тест \u2212 текст');
 
-    // Step 2 active again
     expect(await getStepState(page, 2)).toEqual({ active: true, done: false, pending: false });
 
-    // Red highlights back
     const invalidMark = page.locator('.overlay mark.invalid');
     await expect(invalidMark).toHaveCount(1);
   });
@@ -150,6 +138,32 @@ test.describe('Clean text (no errors)', () => {
   });
 });
 
+test.describe('Example button', () => {
+  test('inserts example text with invalid chars', async ({ page }) => {
+    await page.click('#btn-example');
+
+    const value = await page.inputValue('#textarea');
+    expect(value.length).toBeGreaterThan(0);
+
+    // Should detect invalid chars
+    expect(await getStepState(page, 2)).toEqual({ active: true, done: false, pending: false });
+    await expect(page.locator('#btn-fix')).toBeEnabled();
+
+    const invalidMarks = page.locator('.overlay mark.invalid');
+    const count = await invalidMarks.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('can fix example text', async ({ page }) => {
+    await page.click('#btn-example');
+    await page.click('#btn-fix');
+
+    const status = await getStatusText(page);
+    expect(status).toBe('Исправления применены');
+    expect(await getStepState(page, 3)).toEqual({ active: true, done: false, pending: false });
+  });
+});
+
 test.describe('Format toggle', () => {
   test('toggles between ZT and ПР', async ({ page }) => {
     await expect(page.locator('#btn-format')).toHaveText('ZT');
@@ -164,7 +178,6 @@ test.describe('Format toggle', () => {
     const countBefore = await page.textContent('#char-count');
     await page.click('#btn-format');
     const countAfter = await page.textContent('#char-count');
-    // Both should show char count but page estimates may differ
     expect(countBefore).toContain('500 симв.');
     expect(countAfter).toContain('500 симв.');
   });
@@ -185,8 +198,30 @@ test.describe('PWA modal', () => {
     await expect(page.locator('#pwa-modal')).toBeHidden();
     await page.click('#btn-pwa');
     await expect(page.locator('#pwa-modal')).toBeVisible();
-    // Click backdrop (the modal-backdrop element itself)
     await page.locator('#pwa-modal').click({ position: { x: 5, y: 5 } });
     await expect(page.locator('#pwa-modal')).toBeHidden();
+  });
+});
+
+test.describe('Status layout', () => {
+  test('status text is above the editor', async ({ page }) => {
+    const statusTextBar = page.locator('.status-text-bar');
+    const editor = page.locator('.editor-container');
+
+    const statusBox = await statusTextBar.boundingBox();
+    const editorBox = await editor.boundingBox();
+
+    expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(editorBox.y + 2);
+  });
+
+  test('char count and format toggle are below the editor', async ({ page }) => {
+    await setTextareaValue(page, 'Привет');
+    const editor = page.locator('.editor-container');
+    const bottomBar = page.locator('.status-bar');
+
+    const editorBox = await editor.boundingBox();
+    const bottomBox = await bottomBar.boundingBox();
+
+    expect(bottomBox.y).toBeGreaterThanOrEqual(editorBox.y + editorBox.height - 2);
   });
 });
